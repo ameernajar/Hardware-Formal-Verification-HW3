@@ -1,7 +1,6 @@
-
 module fifo #(
-  parameter int unsigned DEPTH = 64,  // number of entries
-  parameter int unsigned WIDTH = 64   // data width
+  parameter int unsigned DEPTH = 10,  // number of entries
+  parameter int unsigned WIDTH = 8   // data width
 ) (
   input  logic                 clk,
   input  logic                 rst,
@@ -98,7 +97,7 @@ always_ff @(posedge clk) begin
 		if (do_enq) begin
 			if(wr_ptr == sym_place) begin
 				valid_place <= 1;
-				exp_data <= enq_data;
+				expected_data <= enq_data;
 				distance <= count;
 			end
 		end
@@ -116,7 +115,7 @@ end
 
 
 property P;
-    @(posedge clk) valid_place && deq_ready && (distance == 0) |=> deq_data == expected_data; // IMPLEMENT THE PROPERTY HERE
+    @(posedge clk) valid_place && do_deq && (distance == 0) |=> deq_data == expected_data; // IMPLEMENT THE PROPERTY HERE
 endproperty
 
 A: assert property (P);
