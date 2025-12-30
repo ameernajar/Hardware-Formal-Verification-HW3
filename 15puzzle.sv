@@ -83,8 +83,19 @@ c: cover property (@(posedge clk) solution);
 
 // IMPLEMENT THE AUXILIARY CODE HERE IF NEEDED
 
+reg [15:0] visited;
+
+always_ff @(posedge clk) begin
+	if (~rst) visited <= {15'b0, 1'b1};
+	else begin
+		int idx = (empty_x << 2) + empty_y; // equivelant to: int idx = empty_x*4 + empty_y;
+		visited[idx] <= 1'b1;
+	end
+end
+
 property P;
-    @(posedge clk) (1); // IMPLEMENT THE PROPERTY HERE
+    @(posedge clk) cells[0][0] == 0 |-> ##[1:$] (solution && &visited); // IMPLEMENT THE PROPERTY HERE
+			   //  $rose(rst) ##[0:$] (solution && &visited);
 endproperty
 
 A: cover property (P);

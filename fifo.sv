@@ -83,8 +83,40 @@ module fifo #(
 
 // IMPLEMENT THE AUXILIARY CODE HERE
 
+// symbolic variable for place in the FIFO.
+reg [PTRW-1:0] sym_place, distance;
+stable_sym_place: assume property (@(posedge clk) $stable(sym_place) && sym_place >= 0 && sym_place < DEPTH);
+ 
+logic valid_place;
+logic [WIDTH-1:0] expected_data;
+always_ff @(posedge clk) begin
+	if (~rst) begin
+		distance <= 0;
+		valid_place <= 0;
+	end
+	else begin
+		if (do_enq) begin
+			if(wr_ptr == sym_place) begin
+				valid_place <= 1;
+				exp_data <= enq_data;
+				distance <= count;
+			end
+		end
+		if (do_deq) begin
+			if (rd_ptr == sym_place) begin
+				valid_place <= 0;
+			end
+			else begin
+				if (valid_place) distance <= distance - 1;
+			end
+		end
+		
+	end 
+end
+
+
 property P;
-    @(posedge clk) (1); // IMPLEMENT THE PROPERTY HERE
+    @(posedge clk) valid_place && deq_ready && (distance == 0) |=> deq_data == expected_data; // IMPLEMENT THE PROPERTY HERE
 endproperty
 
 A: assert property (P);
