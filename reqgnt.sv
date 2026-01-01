@@ -60,15 +60,18 @@ always_ff @(posedge clk) begin
 				gnt_ptr <= (gnt_ptr == 7) ? 0 : gnt_ptr + 1;
 			end
 		end
+	end
 		
 end
-  
 
 
 
 property P;
-    @(posedge clk) (cnt >= 0 && cnt <= 8) && 
-	(req && (req_ptr == sym_idx)|-> aux_fifo[sym_idx] ##1 aux_fifo[sym_idx] ##[1:7] (gnt && gnt_ptr == sym_idx)); // IMPLEMENT THE PROPERTY HERE
+    @(posedge clk) (cnt >= 0 && cnt <= 8) 				  //every gnt has a previous req, and no more than 8 reqs without gnt
+    and (cnt == 0 |=> !gnt )
+    and ((~aux_fifo[sym_idx] ##1 aux_fifo[sym_idx]) |=> (aux_fifo[sym_idx] ##[1:8] ~aux_fifo[sym_idx]))  //req is served withen 2-8 cycles
+    and (gnt |-> aux_fifo[gnt_ptr] ##1 !aux_fifo[$past(gnt_ptr)]); 	  // fairness
+    
 endproperty
 
 A: assert property (P);
