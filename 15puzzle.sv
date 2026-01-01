@@ -9,24 +9,26 @@ reg[1:0]        empty_y; // y-position of the empty cell
 always @ (posedge clk) begin
   if (~rst) begin
     // Initial state of the board
-    cells[0][0] <= 6;
-    cells[0][1] <= 7;
-    cells[0][2] <= 1;
-    cells[0][3] <= 4;
-    cells[1][0] <= 5;
-    cells[1][1] <= 2;
-    cells[1][2] <= 3;
-    cells[1][3] <= 8;
-    cells[2][0] <= 0;
-    cells[2][1] <= 10;
-    cells[2][2] <= 11;
+    cells[0][0] <= 0;
+    cells[0][1] <= 1;
+    cells[0][2] <= 2;
+    cells[0][3] <= 3;
+    cells[1][0] <= 6;
+    cells[1][1] <= 7;
+    cells[1][2] <= 8;
+    cells[1][3] <= 4;
+    cells[2][0] <= 5;
+    cells[2][1] <= 14;
+    cells[2][2] <= 10;
     cells[2][3] <= 12;
     cells[3][0] <= 9;
     cells[3][1] <= 13;
-    cells[3][2] <= 14;
+    cells[3][2] <= 11;
     cells[3][3] <= 15;
+
+
     // Position (x, y) of the empty cell
-    empty_x <= 2;
+    empty_x <= 0;
     empty_y <= 0;
   end else begin
     if (direction == 2'b00 && empty_y > 3'd0) begin // left
@@ -70,8 +72,10 @@ wire solution = cells[0][0] == 1 &
                 cells[3][2] == 15 &
                 cells[3][3] == 0;
 
+
 // An example cover property for checking that a solution can be reached
 c: cover property (@(posedge clk) solution);
+
 
 // Instructions:
 // 1. Implement "property P;" below.
@@ -94,8 +98,7 @@ always_ff @(posedge clk) begin
 end
 
 property P;
-    @(posedge clk) cells[0][0] == 0 |-> ##[1:$] (solution && &visited); // IMPLEMENT THE PROPERTY HERE
-			   //  $rose(rst) ##[0:$] (solution && &visited);
+    @(posedge clk) $rose(rst) |-> ##[1:$] (solution && &visited); // IMPLEMENT THE PROPERTY HERE
 endproperty
 
 A: cover property (P);
