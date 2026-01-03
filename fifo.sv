@@ -1,6 +1,6 @@
 module fifo #(
-  parameter int unsigned DEPTH = 10,  // number of entries
-  parameter int unsigned WIDTH = 8   // data width
+  parameter int unsigned DEPTH = 64,  // number of entries
+  parameter int unsigned WIDTH = 64   // data width
 ) (
   input  logic                 clk,
   input  logic                 rst,
