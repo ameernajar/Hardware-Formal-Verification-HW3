@@ -5,35 +5,29 @@ module reqgnt(
     input logic gnt
 );
 
-// Instructions:
-// 1. Implement "property P;" below.
-// 2. Use auxiliary code.
-// 3. Do not change the name of the property (keep it "P").
-// 4. Do not change the label of the assert (keep it "A").
+// --- IMPLEMENT THE AUXILIARY CODE HERE ---
 
-// IMPLEMENT THE AUXILIARY CODE HERE
-
-// since every req should be served within 8 cycles, we can have 8 unserved reqs at most
-// thus, for the counter, we need 4 bits +1 for sign bit .
-// by 4 bits we can represent > 8, we make sure that doesnt happen. 
-   
+// 1. Counter for number of pending requests
 reg signed [4:0] cnt;
 
 always @(posedge clk) begin
     if(rst) cnt <= 5'b00000;
     else begin
-        if (req && ~gnt) cnt <= cnt + 1;
-        if (~req && gnt) cnt <= cnt -1;
+        // If both happen simultaneously, counter remains the same
+        if (req && gnt) 
+            cnt <= cnt;
+        else if (req) 
+            cnt <= cnt + 1;
+        else if (gnt) 
+            cnt <= cnt - 1;
     end
 end
 
-
-// symbolic variable presenting an index in the fifo.
+// 2. Symbolic variable for tracking specific request
 reg [2:0] sym_idx;
 stable_sym_idx: assume property (@(posedge clk) $stable(sym_idx));
   
-  
-// auxiliary fifo to help us track reqs and gnts by order.
+// 3. Auxiliary FIFO
 reg [7:0] aux_fifo;
 reg [2:0] req_ptr, gnt_ptr;
 wire full, empty;
@@ -48,11 +42,12 @@ always_ff @(posedge clk) begin
         gnt_ptr <= 3'b0;
     end
     else begin
-        // logic separated to handle simultaneous req/gnt correctly
+        // Handle Request
         if (req && !full) begin
             aux_fifo[req_ptr] <= 1'b1;
             req_ptr <= req_ptr + 1;
         end
+        // Handle Grant
         if (gnt && !empty) begin
             aux_fifo[gnt_ptr] <= 1'b0;
             gnt_ptr <= gnt_ptr + 1;
@@ -60,17 +55,22 @@ always_ff @(posedge clk) begin
     end
 end
 
-
+// --- PROPERTY IMPLEMENTATION ---
 
 property P;
-    // Added reset disable to prevent failures during initialization
+    // CRITICAL: Disable check during reset
     @(posedge clk) disable iff (rst) 
     
-    // every gnt has a previous req, and no more than 8 reqs without gnt
+    // 1. Bounds check (0 to 8 pending requests)
     (cnt >= 0 && cnt <= 8) 
     
+    // 2. No grant allowed if queue is empty
     and (cnt == 0 |-> !gnt ) 
-    and ((~aux_fifo[sym_idx] ##1 aux_fifo[sym_idx]) |=> (aux_fifo[sym_idx] ##[2:8] ~aux_fifo[sym_idx])); 
+    
+    // 3. Timing check: 
+    // When a specific request enters ($rose), it must be cleared ($fell) 
+    // within 2 to 8 cycles.
+    and ($rose(aux_fifo[sym_idx]) |-> ##[2:8] $fell(aux_fifo[sym_idx])); 
     
 endproperty
 
