@@ -59,7 +59,7 @@ end
 
 property P;
     // CRITICAL: Disable check during reset
-    @(posedge clk) disable iff (rst) 
+    @(posedge clk)  
     
     // 1. Bounds check (0 to 8 pending requests)
     (cnt >= 0 && cnt <= 8) 
