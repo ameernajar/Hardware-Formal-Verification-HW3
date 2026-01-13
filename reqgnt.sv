@@ -69,7 +69,7 @@ end
 property P;
     @(posedge clk) (cnt >= 0 && cnt <= 8) 				  //every gnt has a previous req, and no more than 8 reqs without gnt
     and (cnt == 0 |=> !gnt )
-    and ((~aux_fifo[sym_idx] ##1 aux_fifo[sym_idx]) |=> (aux_fifo[sym_idx] ##[1:8] ~aux_fifo[sym_idx]))  //req is served withen 2-8 cycles
+    and ((~aux_fifo[sym_idx] ##1 aux_fifo[sym_idx]) |-> ##[1:7] ~aux_fifo[sym_idx])  //req is served withen 2-8 cycles
     and (gnt |-> aux_fifo[gnt_ptr] ##1 !aux_fifo[$past(gnt_ptr)]); 	  // fairness
     
 endproperty
